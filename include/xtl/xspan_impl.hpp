@@ -309,13 +309,13 @@ public:
     TCB_SPAN_CONSTEXPR11 span(pointer ptr, index_type count)
         : storage_(ptr, count)
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent || count == extent);
+        TCB_SPAN_EXPECT(extent == static_cast<index_type>(dynamic_extent) || count == extent);
     }
 
     TCB_SPAN_CONSTEXPR11 span(pointer first_elem, pointer last_elem)
         : storage_(first_elem, last_elem - first_elem)
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent ||
+        TCB_SPAN_EXPECT(extent == static_cast<index_type>(dynamic_extent) ||
                         last_elem - first_elem == extent);
     }
 
@@ -360,9 +360,9 @@ public:
     TCB_SPAN_CONSTEXPR11 span(Container& cont)
         : storage_(detail::data(cont), detail::size(cont))
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent ||
+        TCB_SPAN_EXPECT(static_cast<std::ptrdiff_t>(extent) == static_cast<std::ptrdiff_t>(dynamic_extent) ||
                         static_cast<std::ptrdiff_t>(detail::size(cont)) ==
-                            extent);
+                            static_cast<std::ptrdiff_t>(extent));
     }
 
     template <typename Container,
@@ -374,7 +374,7 @@ public:
     TCB_SPAN_CONSTEXPR11 span(const Container& cont)
         : storage_(detail::data(cont), detail::size(cont))
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent ||
+        TCB_SPAN_EXPECT(static_cast<std::ptrdiff_t>(extent) == static_cast<std::ptrdiff_t>(dynamic_extent) ||
                         static_cast<std::ptrdiff_t>(detail::size(cont)) ==
                             extent);
     }
@@ -433,25 +433,25 @@ public:
     TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     first(index_type count) const
     {
-        TCB_SPAN_EXPECT(count >= 0 && count <= size());
+        TCB_SPAN_EXPECT(count <= size());
         return {data(), count};
     }
 
     TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     last(index_type count) const
     {
-        TCB_SPAN_EXPECT(count >= 0 && count <= size());
+        TCB_SPAN_EXPECT(count <= size());
         return {data() + (size() - count), count};
     }
 
     TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     subspan(index_type offset, index_type count = static_cast<index_type>(dynamic_extent)) const
     {
-        TCB_SPAN_EXPECT((offset >= 0 && offset <= size()) &&
-                        (count == dynamic_extent ||
-                         (count >= 0 && offset + count <= size())));
+        TCB_SPAN_EXPECT(offset <= size() &&
+                        (count == static_cast<index_type>(dynamic_extent) ||
+                         (offset + count <= size())));
         return {data() + offset,
-                count == dynamic_extent ? size() - offset : count};
+                count == static_cast<index_type>(dynamic_extent) ? size() - offset : count};
     }
 
     // [span.obs], span observers
@@ -467,7 +467,7 @@ public:
     // [span.elem], span element access
     TCB_SPAN_CONSTEXPR11 reference operator[](index_type idx) const
     {
-        TCB_SPAN_EXPECT(idx >= 0 && idx < size());
+        TCB_SPAN_EXPECT(idx < size());
         return *(data() + idx);
     }
 
@@ -476,7 +476,7 @@ public:
     TCB_SPAN_CONSTEXPR14 reference at(index_type idx) const
     {
 #ifndef TCB_SPAN_NO_EXCEPTIONS
-        if (idx < 0 || idx >= size()) {
+        if (idx >= size()) {
             char msgbuf[64] = {
                 0,
             };
